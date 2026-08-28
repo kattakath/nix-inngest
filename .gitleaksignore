@@ -1,17 +1,22 @@
 # gitleaks allowlist — one entry, and it is NOT a secret.
 #
-# Commit bb636d92 carried a VM-test fixture in flake.nix:
-#   INNGEST_SIGNING_KEY=00112233445566778899aabbccddeeff
-# a hand-typed placeholder that only ever existed to give the NixOS VM test a
-# hex string of even length, which is all `inngest` validates. It was never
-# issued by anything, never authorised anything, and never left this repository.
+# Commit bb636d92 carried a VM-test fixture in flake.nix: a 32-character hex
+# placeholder assigned to INNGEST_SIGNING_KEY, hand-typed purely to give the NixOS
+# VM test a hex string of even length, which is all `inngest` validates. It was
+# never issued by anything, never authorised anything, and never left this
+# repository.
+#
+# The value is deliberately NOT reproduced here. An earlier revision of this file
+# quoted it in full to explain the entry — and gitleaks then flagged THIS file,
+# correctly: writing a secret into the allowlist that excuses it puts the secret
+# back in the tree. Describe the finding; never restate it.
 #
 # It is ignored HISTORICALLY rather than removed because `main` is protected by a
 # non-fast-forward rule — rewriting published history to erase a value that was
 # never sensitive is the more disruptive of the two options.
 #
-# HEAD no longer contains it: the fixture is now `deadbeef`, short enough not to
-# trip the generic-api-key rule at all. So this file should never grow. A new
-# entry here means someone is silencing a finding rather than fixing it — treat
-# any addition as a review blocker unless it carries the same kind of note.
+# HEAD no longer contains it: the fixture is now short enough not to trip the
+# generic-api-key rule at all. So this file should never grow. A new entry here
+# means someone is silencing a finding rather than fixing it — treat any addition
+# as a review blocker unless it carries the same kind of note.
 bb636d92d6eee04c49a4c025dbf2519ab26f8f1f:flake.nix:generic-api-key:255
