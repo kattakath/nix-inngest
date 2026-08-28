@@ -250,9 +250,13 @@
                     imports = [ self.nixosModules.default ];
                     nixpkgs.config.allowUnfreePredicate = pkg: lib.getName pkg == "inngest";
 
-                    # Test fixture only — an obviously-fake key, never a real credential.
+                    # Test fixture only, never a real credential. The value is kept
+                    # SHORT and obviously fake on purpose: a longer hex string here
+                    # trips gitleaks' generic-api-key rule, and an allowlist entry
+                    # would hide a real leak later just as effectively as this one.
+                    # `inngest` only requires hex with an even character count.
                     environment.etc."inngest-env".text = ''
-                      INNGEST_SIGNING_KEY=00112233445566778899aabbccddeeff
+                      INNGEST_SIGNING_KEY=deadbeef
                       INNGEST_EVENT_KEY=test-event-key
                     '';
 
