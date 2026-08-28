@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # REQUIRED by the merge queue: a queue entry is built on its own
+  # `gh-readonly-queue/main/...` ref, which emits NEITHER `pull_request` NOR
+  # `push`. Without this trigger the required `checks` context never reports on a
+  # queued entry and every merge times out.
+  merge_group:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: cachix/cachix-action@v17
+        with:
+          name: kattakath
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Flake outputs well-formed
+        run: nix flake show
+
+      # `--all-systems` is NOT optional here. The NixOS module check is Linux-gated
+      # and the home-manager one is darwin-gated, so a bare `nix flake check` on an
+      # x86_64 runner silently evaluates neither and reports success.
+      - name: Checks (all systems)
+        run: nix flake check --all-systems -L
+
+      # NOT run in CI: `nix build .#vm-test`. It builds the real `inngest`, which is
+      # unfree (SSPL) and absent from cache.nixos.org, and whose pnpm UI closure is
+      # large enough to exhaust a hosted runner's disk. Run it locally when touching
+      # the unit's runtime behaviour.
