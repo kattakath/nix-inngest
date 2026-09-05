@@ -88,6 +88,7 @@ rather than a bare interpreter.
 |---|---|---|
 | unset | unset | Bundled SQLite under `stateDir` + in-memory Redis. Zero dependencies, single node, no persistence guarantee for the queue. |
 | set | set | External Postgres + Redis. The only configuration suitable for more than one node. |
+| set | unset | External Postgres for configuration and history, bundled in-memory Redis for the queue. Durable state, but the queue keeps the single-node caveat. |
 | unset | set | Rejected by an assertion — an external queue with SQLite state is not a coherent pairing. |
 
 Two upstream behaviours worth knowing before you rely on this:
@@ -104,7 +105,7 @@ instances.
 ## Tests
 
 ```bash
-nix flake check --all-systems   # eval checks: argv, secrets, hardening, launchd arg0
+nix flake check                 # eval checks: argv, secrets, hardening, launchd arg0
 nix build .#vm-test             # opt-in: boots a VM and runs the real binary
 ```
 
@@ -114,6 +115,11 @@ despite the unfree dependency. `vm-test` is the complement: it builds the real p
 boots a NixOS VM, and asserts the service comes up **listening on loopback rather than
 `0.0.0.0`** — the one claim an eval check cannot make. It is kept out of `checks` so
 `nix flake check` never drags in the unfree closure.
+
+Not `--all-systems`: every check is per-system (the NixOS `module-eval` on Linux, the
+home-manager `hm-eval` on darwin), and that flag makes one machine try to BUILD the other
+systems' checks, which fails with a `platform mismatch` unless a matching builder happens
+to be attached. CI covers all three systems with one native runner each.
 
 ## Options
 
