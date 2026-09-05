@@ -52,7 +52,26 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    inherit (validation) assertions warnings;
+    inherit (validation) warnings;
+
+    # The shared rules, plus one that is NOT shared: systemd resolves
+    # StateDirectory relative to /var/lib and rejects an absolute value, so this
+    # module cannot honour a stateDir outside it. The Home Manager module has no
+    # such constraint (its default is ~/.local/state/inngest), which is why this
+    # lives here rather than in common.nix. Failing at eval with the reason beats
+    # a unit that refuses to load.
+    assertions = validation.assertions ++ [
+      {
+        assertion = lib.hasPrefix "/var/lib/" cfg.stateDir;
+        message = ''
+          services.inngest.stateDir must live under /var/lib (got "${cfg.stateDir}").
+          The unit uses systemd StateDirectory, which is resolved relative to
+          /var/lib and grants the DynamicUser ownership of exactly that path; a
+          directory elsewhere would be neither created nor writable under
+          ProtectSystem = "strict".
+        '';
+      }
+    ];
 
     networking.firewall = lib.mkIf cfg.openFirewall {
       allowedTCPPorts = [
@@ -88,7 +107,12 @@ in
 
         # ---- systemd hardening -------------------------------------------------
         DynamicUser = true;
-        StateDirectory = "inngest";
+        # DERIVED from stateDir, not hardcoded. systemd resolves StateDirectory
+        # relative to /var/lib and grants the DynamicUser ownership of exactly
+        # that path — so a hardcoded "inngest" meant a custom stateDir got a
+        # WorkingDirectory the unit neither owns nor, under
+        # ProtectSystem = "strict", can write to. The two silently disagreed.
+        StateDirectory = lib.removePrefix "/var/lib/" cfg.stateDir;
         RuntimeDirectory = "inngest";
         WorkingDirectory = cfg.stateDir;
         ProtectSystem = "strict";
