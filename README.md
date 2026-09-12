@@ -1,3 +1,18 @@
+> [!IMPORTANT]
+> ## Archived 2026-09-12 — never adopted
+>
+> This repo was an extraction candidate for
+> [kattakath/nix-config](https://github.com/kattakath/nix-config) and was never wired in.
+> It is archived rather than absorbed, because absorbing an unused extraction would add code
+> to the fleet that nothing consumes.
+>
+> `nix-config` itself went the other way on 2026-09-12: it absorbed all seven of its satellite
+> flakes as in-tree *capsules* — see
+> [`docs/monoflake-capsule-adr.md`](https://github.com/kattakath/nix-config/blob/main/docs/monoflake-capsule-adr.md).
+> The case for extracting anything further is correspondingly weaker.
+>
+> **Read-only.** History preserved here.
+
 # nix-inngest
 
 Hardened **NixOS** and **home-manager** modules for a self-hosted
